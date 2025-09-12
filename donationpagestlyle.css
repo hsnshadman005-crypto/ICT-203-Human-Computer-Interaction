@@ -77,3 +77,13 @@ body {
     #amountSection {
       display: none;
     }
+    .selected {
+      background-color: #4CAF50;
+      color: white; 
+    }
+    .amounts button {
+      margin: 5px;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+    }
