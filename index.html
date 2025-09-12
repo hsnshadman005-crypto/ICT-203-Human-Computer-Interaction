@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Little Smile — Functional Charity Template</title>
+<meta name="description" content="Functional charity template with donate flow, progress bar, and accessible feedback." />
+<meta name="theme-color" content="#dc2626" />
+<style>
+  /* ===== Design tokens ===== */
+  :root{
+    --red:#dc2626; --red-700:#b91c1c;
+    --ink:#111827; --ink-inv:#ffffff; --muted:#6b7280;
+    --bg:#ffffff; --alt:#f8fafc; --border:#e5e7eb;
+    --radius:.85rem; --shadow:0 12px 30px rgba(0,0,0,.08);
+    --ok:#16a34a; --warn:#b45309; --err:#b91c1c;
+  }
+
+  /* ===== Base ===== */
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+  img{max-width:100%;height:auto;display:block}
+  a{color:inherit}
+  .container{width:min(1120px,92%);margin:0 auto}
+  .muted{color:var(--muted)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  /* ===== Header ===== */
+  .site-header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--border)}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;padding:.75rem 4vw}
+  .brand{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;font-weight:800}
+  .brand-mark{display:inline-grid;place-items:center;width:36px;height:36px;border-radius:999px;background:var(--red);color:#fff;font-weight:900}
+  .site-nav{display:flex;gap:.5rem}
+  .site-nav a{text-decoration:none;color:var(--ink);padding:.4rem .7rem;border-radius:.5rem}
+  .site-nav a[aria-current="page"], .site-nav a:hover{background:#fef2f2;color:var(--red)}
+
+  /* ===== Hero ===== */
+  .hero{position:relative;isolation:isolate;background:
+    radial-gradient(40% 60% at 0% 0%, rgba(220,38,38,.08) 0%, transparent 60%),
+    radial-gradient(40% 60% at 100% 0%, rgba(220,38,38,.10) 0%, transparent 60%),
+    radial-gradient(60% 80% at 50% 100%, rgba(220,38,38,.10) 0%, transparent 60%)}
+  .hero-inner{display:grid;grid-template-columns:1.05fr .95fr;gap:2rem;align-items:center;padding:2.4rem 0 1.4rem}
+  .badge{display:inline-block;background:#fee2e2;color:#7f1d1d;border:1px solid #fecaca;padding:.25rem .55rem;border-radius:.5rem;font-weight:700}
+  h1{font-size:clamp(2.1rem,4.5vw,3.2rem);line-height:1.15;margin:.5rem 0 .75rem}
+  .lead{color:#374151;font-size:1.07rem}
+  .cta-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem}
+  .btn{display:inline-block;border:1px solid var(--border);background:#fff;color:var(--ink);padding:.8rem 1rem;border-radius:.65rem;text-decoration:none;font-weight:800;box-shadow:var(--shadow)}
+  .btn-primary{background:var(--red);border-color:var(--red);color:var(--ink-inv)}
+  .btn-primary:hover{background:var(--red-700);border-color:var(--red-700)}
+  .btn-ghost{background:transparent}
+  button[disabled]{opacity:.6;cursor:not-allowed}
+
+  /* ===== Donate card ===== */
+  .donate{background:var(--alt);border:1px solid var(--border);border-radius:var(--radius);padding:1rem}
+  .donate h3{margin:.25rem 0 .5rem}
+  .freq{display:flex;gap:.75rem;align-items:center;margin:.5rem 0}
+  .freq input{accent-color:var(--red)}
+  .amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin:.75rem 0}
+  .amount{position:relative}
+  .amount input{position:absolute;opacity:0;pointer-events:none}
+  .amount label{display:block;text-align:center;padding:.8rem;border:1px solid var(--border);border-radius:.7rem;background:#fff;font-weight:800;cursor:pointer}
+  .amount input:checked + label{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.15)}
+  .inline{display:flex;gap:.5rem;align-items:center}
+  .field{width:100%;padding:.75rem .8rem;border:1px solid var(--border);border-radius:.6rem}
+  .select{width:100%;padding:.65rem .8rem;border:1px solid var(--border);border-radius:.6rem;background:#fff}
+
+  .status{margin:.5rem 0 0;font-weight:700}
+  .status.ok{color:var(--ok)}
+  .status.warn{color:var(--warn)}
+  .status.err{color:var(--err)}
+
+  /* ===== Progress ===== */
+  .progress-wrap{display:flex;flex-direction:column;gap:.35rem;margin-top:.75rem}
+  .progress{height:.9rem;background:#fff;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+  .bar{height:100%;width:0;background:linear-gradient(90deg,#ef4444,#dc2626)}
+  .mini{font-size:.95rem}
+
+  /* ===== Sections ===== */
+  .section{padding:2.2rem 0}
+  .section.alt{background:var(--alt)}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:1rem;box-shadow:var(--shadow)}
+  .icon{font-size:1.4rem}
+
+  /* ===== Impact strip ===== */
+  .impact{background:var(--red);color:#fff}
+  .impact-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;padding:1.25rem 0}
+  .impact .btn{border-color:rgba(255,255,255,.25);background:transparent;color:#fff}
+
+  /* ===== Footer ===== */
+  .site-footer{border-top:1px solid var(--border);padding:1.5rem 0;background:#fff}
+  .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:1rem}
+
+  /* ===== Simple error highlight (added) ===== */
+  .input-error{border-color:var(--err) !important; box-shadow:0 0 0 3px rgba(185,28,28,.15)}
+  
+  /* ===== Responsive ===== */
+  @media (max-width: 900px){
+    .hero-inner{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr 1fr}
+    .amounts{grid-template-columns:repeat(3,1fr)}
+  }
+  @media (max-width: 640px){
+    .grid-3{grid-template-columns:1fr}
+    .amounts{grid-template-columns:repeat(2,1fr)}
+    .footer-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+  <!-- Skip link -->
+  <a class="sr-only" href="#main">Skip to content</a>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header" id="top">
+    <div class="header-inner container">
+      <a class="brand" href="#top" aria-label="Little Smile home">
+        <span class="brand-mark" aria-hidden="true">❤</span>
+        <span>Little Smile</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#top" aria-current="page">Home</a>
+        <a href="#donate">Donate</a>
+        <a href="#programs">Programs</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ===== Hero + Donate ===== -->
+    <section class="hero">
+      <div class="hero-inner container">
+        <div class="hero-text">
+          <span class="badge">Emergency aid • Ongoing support</span>
+          <h1>Protect children. Change futures.</h1>
+          <p class="lead">Your gift funds food, education, and healthcare where it’s needed most. Fast, transparent, effective.</p>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="#donate">Donate Now</a>
+            <a class="btn btn-ghost" href="#programs">See Programs</a>
+          </div>
+        </div>
+
+        <!-- ===== Donate card (functional) ===== -->
+        <aside id="donate" class="donate" aria-label="Donate">
+          <h3>Choose your gift</h3>
+
+          <form id="donationForm" action="#" method="post" novalidate>
+            <fieldset class="freq">
+              <legend class="sr-only">Frequency</legend>
+              <label><input type="radio" name="freq" value="monthly" checked> Monthly</label>
+              <label><input type="radio" name="freq" value="once"> One-off</label>
+            </fieldset>
+
+            <div class="amounts" role="group" aria-label="Select an amount">
+              <div class="amount"><input type="radio" id="a20" name="amount" value="20" checked><label for="a20">$20</label></div>
+              <div class="amount"><input type="radio" id="a40" name="amount" value="40"><label for="a40">$40</label></div>
+              <div class="amount"><input type="radio" id="a80" name="amount" value="80"><label for="a80">$80</label></div>
+              <div class="amount"><input type="radio" id="a120" name="amount" value="120"><label for="a120">$120</label></div>
+            </div>
+
+            <label class="muted" for="custom">Or enter your own amount</label>
+            <div class="inline" style="margin:.35rem 0 1rem">
+              <span aria-hidden="true" style="display:inline-grid;place-items:center;font-weight:800">$</span>
+              <input id="custom" name="custom" type="number" min="1" step="1" placeholder="50" class="field" inputmode="numeric" />
+            </div>
+
+            <div class="inline" style="margin:.25rem 0 1rem">
+              <label class="sr-only" for="project">Project</label>
+              <select id="project" class="select" aria-label="Choose a project">
+                <option value="Food & Nutrition">Food & Nutrition</option>
+                <option value="Education">Education</option>
+                <option value="Health">Health</option>
+              </select>
+              <label class="sr-only" for="dedicate">Dedicate to</label>
+              <input id="dedicate" class="field" placeholder="Dedicate to (optional)" />
+            </div>
+
+            <button id="donateBtn" class="btn btn-primary" type="submit">Donate securely</button>
+            <button id="undoBtn" class="btn" type="button" style="margin-left:.5rem;display:none">Undo last</button>
+
+            <!-- Live regions for feedback -->
+            <p id="donationError" class="status err" role="alert" style="display:none"></p>
+            <p id="donationStatus" class="status ok" role="status" aria-live="polite" style="display:none"></p>
+          </form>
+
+          <!-- Donation progress -->
+          <div class="progress-wrap" aria-live="polite">
+            <div class="progress" aria-label="Donation progress towards goal">
+              <div id="bar" class="bar" style="width:0%"></div>
+            </div>
+            <div class="mini">
+              <strong id="raised">$0</strong> raised of <strong id="goalLabel">$5,000</strong> goal
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===== Programs ===== -->
+    <section id="programs" class="section container">
+      <header>
+        <h2>Where your gift goes</h2>
+        <p class="muted">Three focused programs create lasting impact for children.</p>
+      </header>
+      <div class="grid-3" style="margin-top:1rem">
+        <article class="card"><div class="icon" aria-hidden="true">🍎</div><h3>Food & Nutrition</h3><p>School meals and nutrition packs to fight hunger and keep kids in class.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">📚</div><h3>Education</h3><p>Books, tuition support, and learning kits so children can thrive.</p></article>
+        <article class="card"><div class="icon" aria-hidden="true">🩺</div><h3>Health</h3><p>Checkups, vaccinations, and hygiene kits to keep kids safe and healthy.</p></article>
+      </div>
+    </section>
+
+    <!-- ===== Impact strip ===== -->
+    <section class="impact">
+      <div class="impact-inner container">
+        <h2 style="margin:0">Your support, their future</h2>
+        <a class="btn" href="#donate">Give now</a>
+      </div>
+    </section>
+
+    <!-- ===== Contact ===== -->
+    <section id="contact" class="section container">
+      <header><h2>Contact us</h2><p class="muted">Questions about donating or our programs? We’d love to help.</p></header>
+      <form id="contactForm" class="card" style="margin-top:1rem;max-width:560px" action="#" method="post" novalidate>
+        <label>Name<br><input class="field" type="text" name="name" required></label><br><br>
+        <label>Email<br><input class="field" type="email" name="email" required></label><br><br>
+        <label>Message<br><textarea class="field" name="message" rows="4" required></textarea></label><br><br>
+        <button class="btn btn-primary" type="submit">Send message</button>
+        <p id="contactStatus" class="status ok" role="status" aria-live="polite" style="display:none;margin-top:.5rem"></p>
+      </form>
+    </section>
+  </main>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">❤</span><span>Little Smile</span></a>
+        <p class="muted">ABN 00 000 000 000 · Registered charity</p>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#top">Home</a> · <a href="#donate">Donate</a> · <a href="#programs">Programs</a> · <a href="#contact">Contact</a>
+      </nav>
+      <p class="muted">© <span id="year">2025</span> Little Smile. All rights reserved.</p>
+    </div>
+  </footer>
+
+<script>
+/* ========= Functional logic (vanilla JS) ========= */
+(() => {
+  const AUD = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
+
+  // Elements
+  const form = document.getElementById('donationForm');
+  const donateBtn = document.getElementById('donateBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const presets = [...document.querySelectorAll('input[name="amount"]')];
+  const custom = document.getElementById('custom');
+  const freqRadios = [...document.querySelectorAll('input[name="freq"]')];
+  const projectSel = document.getElementById('project');
+  const dedicate = document.getElementById('dedicate');
+
+  const errorEl = document.getElementById('donationError');
+  const statusEl = document.getElementById('donationStatus');
+
+  const bar = document.getElementById('bar');
+  const raisedEl = document.getElementById('raised');
+  const goalLabel = document.getElementById('goalLabel');
+
+  // Donation goal & storage
+  const GOAL = 5000;
+  goalLabel.textContent = AUD.format(GOAL);
+  let total = Number(localStorage.getItem('ls_total') || 0);
+  let lastDonation = null; // { amount, freq }
+
+  function fmt(n){ return AUD.format(n); }
+
+  function updateProgress(){
+    const pct = Math.max(0, Math.min(100, (total / GOAL) * 100));
+    bar.style.width = pct + '%';
+    raisedEl.textContent = fmt(total);
+  }
+  updateProgress();
+
+  function clearMsgs(){
+    errorEl.style.display = 'none';
+    statusEl.style.display = 'none';
+    // clear visual error highlight (added)
+    if (custom) custom.classList.remove('input-error');
+  }
+  function showError(msg){
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+    statusEl.style.display = 'none';
+    // add visual error highlight (added)
+    if (custom) custom.classList.add('input-error');
+  }
+  function showOK(msg){
+    statusEl.textContent = msg;
+    statusEl.style.display = 'block';
+    errorEl.style.display = 'none';
+    if (custom) custom.classList.remove('input-error');
+  }
+
+  // If user types a custom amount, visually uncheck presets and clear error
+  custom.addEventListener('input', () => {
+    if (custom.value && Number(custom.value) > 0) {
+      presets.forEach(r => r.checked = false);
+      clearMsgs(); // (added)
+    }
+  });
+
+  // If user clicks a preset, clear custom value and any errors
+  presets.forEach(r => r.addEventListener('change', () => { 
+    custom.value = ''; 
+    clearMsgs(); // (added)
+  }));
+
+  function selectedFreq(){
+    return (freqRadios.find(r => r.checked) || { value:'monthly' }).value;
+  }
+
+  function selectedAmount(){
+    const typed = Number(custom.value);
+    if (!Number.isNaN(typed) && typed > 0) return Math.floor(typed);
+    const checked = presets.find(r => r.checked);
+    return checked ? Number(checked.value) : 0;
+  }
+
+  function validate(){
+    const amt = selectedAmount();
+    if (!amt || amt < 1) return 'Please choose or enter a valid amount (minimum $1).';
+    if (amt > 50000) return 'For large donations over $50,000 please contact us via the form.';
+    return '';
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearMsgs();
+
+    const err = validate();
+    if (err) { showError(err); return; }
+
+    const amt = selectedAmount();
+    const freq = selectedFreq();
+    const proj = projectSel.value;
+    const ded = (dedicate.value || '').trim();
+
+    donateBtn.disabled = true;
+
+    // Simulate secure processing
+    setTimeout(() => {
+      // Persist
+      total += amt;
+      localStorage.setItem('ls_total', String(total));
+      updateProgress();
+
+      // Receipt-like reference
+      const ref = 'LS-' + Date.now().toString(36).slice(-8).toUpperCase();
+
+      // Success message
+      const pieces = [
+        `Thank you! We received ${fmt(amt)} as a ${freq === 'monthly' ? 'monthly' : 'one-off'} gift.`,
+        `Project: ${proj}${ded ? ` • Dedicated to: ${ded}` : ''}.`,
+        `Reference: ${ref}.`
+      ];
+      showOK(pieces.join(' '));
+
+      donateBtn.disabled = false;
+
+      // Enable undo (for this session)
+      lastDonation = { amount: amt };
+      undoBtn.style.display = 'inline-block';
+      // Auto-hide undo after 20s
+      clearTimeout(undoBtn._t);
+      undoBtn._t = setTimeout(() => { undoBtn.style.display = 'none'; }, 20000);
+
+      // Reset only the custom text to avoid losing context
+      custom.value = '';
+    }, 500);
+  });
+
+  undoBtn.addEventListener('click', () => {
+    clearMsgs();
+    if (lastDonation && lastDonation.amount) {
+      total = Math.max(0, total - lastDonation.amount);
+      localStorage.setItem('ls_total', String(total));
+      updateProgress();
+      showOK(`Last donation of ${fmt(lastDonation.amount)} has been reversed.`);
+      lastDonation = null;
+      undoBtn.style.display = 'none';
+    } else {
+      showError('Nothing to undo.');
+    }
+  });
+
+  // Contact form (demo)
+  const contactForm = document.getElementById('contactForm');
+  const contactStatus = document.getElementById('contactStatus');
+  contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    contactStatus.textContent = 'Thanks! Your message has been sent.';
+    contactStatus.style.display = 'block';
+    setTimeout(() => { contactStatus.style.display = 'none'; contactForm.reset(); }, 2500);
+  });
+
+})();
+</script>
+</body>
+</html>
