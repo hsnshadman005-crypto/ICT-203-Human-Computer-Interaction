@@ -1,0 +1,104 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('background.jpeg'); 
+    background-size: cover; 
+    background-position: center; 
+    background-repeat: no-repeat; 
+}
+.container {
+    width: 90%;
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    margin-bottom: 20px;
+}
+img {
+    max-width: 10%;
+    height: auto;
+}
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+.progress {
+    background: #f0f0f0;
+    border-radius: 5px;
+    margin: 15px 0;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+}
+.donation-form {
+    margin-top: 20px;
+}
+.form-group {
+    margin-bottom: 20px;
+}
+label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+.amount-options {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+.amount-options label {
+    flex: 1;
+    text-align: center;
+}
+input[type="submit"],
+.nav-button {
+    background: #e60000;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.3s;
+    margin-top: 10px;
+    width: 100%;
+}
+input[type="submit"]:hover,
+.nav-button:hover {
+    background: #c70000;
+}
+.footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 20px;
+}
+.input-container {
+    position: relative;
+    display: inline-block;
+}
+.input-container input[type="text"] {
+    padding-left: 20px; 
+}
+.input-container .dollar-sign {
+    position: absolute;
+    left: 5px; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    pointer-events: none; 
+}
